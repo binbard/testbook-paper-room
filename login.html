@@ -122,6 +122,16 @@
 </head>
 <body>
 
+<!-- Immediate redirect if token exists — no flash for returning users -->
+<script>
+if (localStorage.getItem('tb_token')) {
+  // Verify token is still valid by checking the app page
+  fetch('/api/series', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('tb_token') } })
+    .then(r => { if (r.ok) window.location.href = '/app'; })
+    .catch(() => {});
+}
+</script>
+
 <div class="card">
   <div class="card-top">
     <div class="brand-mark">TB</div>
@@ -177,15 +187,15 @@ if (savedEmail) {
 
 (async function autoLogin(){
   const existingToken = localStorage.getItem('tb_token');
-  if (!existingToken) return;
-  // Quick check: try hitting a protected endpoint
-  try {
-    const res = await fetch('/api/series', {
-      headers: { 'Authorization': `Bearer ${existingToken}` }
-    });
-    if (res.ok) {
-      window.location.href = '/app';
-    } else {
+  if (existingToken) {
+    try {
+      const res = await fetch('/api/series', {
+        headers: { 'Authorization': `Bearer ${existingToken}` }
+      });
+      if (res.ok) {
+        window.location.href = '/app';
+        return; // redirecting — never show login
+      }
       // Token expired — try with saved credentials
       if (savedEmail && savedPass) {
         const loginRes = await fetch('/api/auth/login', {
@@ -197,14 +207,13 @@ if (savedEmail) {
         if (loginRes.ok && data.token) {
           localStorage.setItem('tb_token', data.token);
           window.location.href = '/app';
-          return;
+          return; // redirecting — never show login
         }
       }
-      // Can't auto-login — show form
       localStorage.removeItem('tb_token');
+    } catch(e) {
+      // Server might be down — show login form
     }
-  } catch(e) {
-    // Server might be down — show login form
   }
 })();
 
