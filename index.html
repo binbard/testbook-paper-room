@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testbook Paper Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF1EC;
+    --card:#FCFCFA;
+    --ink:#1C2B45;
+    --ink-soft:#3B4A63;
+    --muted:#6B7280;
+    --line:#D6D2C4;
+    --seal-red:#A8382F;
+    --seal-green:#2F6B4F;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-font-smoothing:antialiased;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; font-size:15px; line-height:1.5;}
+  ::selection{background:var(--ink); color:var(--paper);}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+  [hidden]{display:none !important;}
+
+  /* header */
+  header.site{border-bottom:1px solid var(--line); background:var(--card);}
+  .header-inner{display:flex; align-items:center; justify-content:space-between; padding:18px 24px; gap:16px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:12px; cursor:pointer;}
+  .brand-mark{width:38px; height:38px; border:1.5px solid var(--ink); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-weight:600; font-size:14px; flex:none;}
+  .brand-text .name{font-family:'Fraunces', serif; font-weight:600; font-size:19px; letter-spacing:0.2px;}
+  .brand-text .sub{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted); text-transform:uppercase; margin-top:1px;}
+  .header-right{display:flex; align-items:center; gap:10px;}
+  .search-box{display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--paper); padding:9px 12px; min-width:200px; border-radius:var(--radius);}
+  .search-box input{border:none; background:transparent; outline:none; width:100%; font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--ink);}
+  .search-box svg{flex:none; opacity:0.55;}
+  .icon-btn{
+    width:38px; height:38px; border:1px solid var(--line); border-radius:50%; background:var(--card);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft); flex:none;
+  }
+  .icon-btn:hover{border-color:var(--ink-soft); color:var(--ink);}
+
+  main.wrap{padding-bottom:60px;}
+
+  /* ---------- series list (level 1) ---------- */
+  .section-heading{padding:26px 0 4px; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+  .section-heading h2{font-family:'Fraunces', serif; font-weight:500; font-size:20px; margin:0;}
+  .section-heading .hint{font-size:12px; color:var(--muted);}
+
+  .series-list{list-style:none; margin:6px 0 0; padding:0; border-top:1px solid var(--line);}
+  .series-row{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:18px 4px; border-bottom:1px solid var(--line);
+    cursor:pointer; background:var(--card); transition:background .12s ease;
+  }
+  .series-row:hover{background:#fff;}
+  .series-row .left{display:flex; align-items:center; gap:14px; min-width:0; flex:1 1 240px;}
+  .series-icon{
+    width:38px; height:38px; flex:none; border:1px solid var(--line); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  .series-name{font-family:'Fraunces', serif; font-size:16.5px; font-weight:500; line-height:1.3;}
+  .series-right{display:flex; align-items:center; gap:14px; flex:none; margin-left:auto;}
+  .series-count{font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--muted); white-space:nowrap;}
+  .chevron{color:var(--ink-soft); flex:none;}
+
+  /* ---------- level 2 (tests within a series) ---------- */
+  .back-row{display:flex; align-items:center; gap:8px; padding:22px 0 4px; cursor:pointer; width:fit-content; background:none; border:none;}
+  .back-row span.label{font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase;}
+  .back-row:hover span.label{color:var(--ink);}
+
+  .series-title{font-family:'Fraunces', serif; font-weight:500; font-size:22px; margin:8px 0 18px;}
+
+  .controls{padding:4px 0 6px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .tabs{display:flex; gap:2px; border:1px solid var(--line); border-radius:var(--radius); padding:2px; background:var(--card);}
+  .tab{border:none; background:transparent; padding:8px 14px; font-size:12.5px; color:var(--muted); cursor:pointer; border-radius:1px; font-family:'IBM Plex Mono',monospace;}
+  .tab.active{background:var(--ink); color:var(--paper);}
+
+  .pills{display:flex; gap:8px; flex-wrap:wrap; padding:14px 0 4px;}
+  .pill{border:1px solid var(--line); background:var(--card); color:var(--ink-soft); font-size:12.5px; padding:7px 13px; border-radius:999px; cursor:pointer; letter-spacing:0.01em; transition:all .15s ease;}
+  .pill:hover{border-color:var(--ink-soft);}
+  .pill.active{background:var(--ink); border-color:var(--ink); color:var(--paper);}
+
+  .test-list{list-style:none; margin:14px 0 0; padding:0; border-top:1px solid var(--line);}
+  .test-row{
+    display:flex; align-items:center; gap:12px; padding:13px 4px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); background:var(--card);
+  }
+  .test-row:hover{background:#fff;}
+  .row-arrow{color:var(--muted); flex:none; font-family:'IBM Plex Mono',monospace;}
+  .row-name{font-size:13.8px; flex:1 1 160px; min-width:0;}
+  .row-sep{color:var(--line); flex:none;}
+  .row-q{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft); white-space:nowrap; flex:none; min-width:52px;}
+  .row-actions{display:flex; gap:6px; flex:none; margin-left:auto;}
+  .row-btn{
+    border:1px solid var(--line); background:transparent; color:var(--ink-soft);
+    font-size:11.5px; padding:6px 10px; cursor:pointer; display:flex; align-items:center; gap:5px;
+    font-family:'IBM Plex Sans', sans-serif; white-space:nowrap;
+  }
+  .row-btn:hover{border-color:var(--ink); color:var(--ink);}
+  .row-btn.dl-btn.done{border-color:var(--seal-green); color:var(--seal-green);}
+
+  .divider-row{
+    display:flex; align-items:center; gap:12px; padding:14px 4px 8px; color:var(--muted);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+  }
+  .divider-row::before, .divider-row::after{content:""; flex:1; border-top:1px dashed var(--line);}
+
+  .empty{text-align:center; padding:60px 20px; color:var(--muted); border:1px dashed var(--line); font-family:'IBM Plex Mono',monospace; font-size:13px; margin-top:14px;}
+
+  /* ---------- about page ---------- */
+  .about-block{padding:8px 0 40px; max-width:560px;}
+  .about-block h1{font-family:'Fraunces', serif; font-weight:500; font-size:clamp(22px,3.2vw,28px); margin:14px 0 14px;}
+  .about-block p{color:var(--ink-soft); font-size:14.5px; margin:0 0 14px;}
+
+  /* ---------- full page paper viewer (level 3) ---------- */
+  .paper-head{padding:6px 0 10px;}
+  .paper-head h2{font-family:'Fraunces', serif; font-weight:500; font-size:21px; margin:6px 0 10px; max-width:560px;}
+  .paper-meta{display:flex; gap:12px; flex-wrap:wrap; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft); align-items:center;}
+  .badge{border:1px solid var(--line); border-radius:999px; padding:3px 10px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;}
+  .paper-note{font-size:12.5px; color:var(--muted); margin:14px 0 6px; border-top:1px dashed var(--line); padding-top:14px;}
+
+  .qblock{border-bottom:1px solid var(--line); padding:20px 0;}
+  .qblock .qnum{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;}
+  .qblock .qtext{font-size:14.5px; margin-bottom:12px;}
+  .qblock .opts{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;}
+  .qblock .opt{border:1px solid var(--line); padding:8px 12px; font-size:13px; color:var(--ink-soft); border-radius:var(--radius);}
+  .sol-toggle{
+    border:1px solid var(--line); background:transparent; color:var(--ink-soft); font-size:12px;
+    padding:7px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .sol-toggle:hover{border-color:var(--ink); color:var(--ink);}
+  .solution{margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;}
+  .solution .sol-para{margin-bottom:12px;}
+  .solution .sol-title{font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--seal-green); margin-bottom:4px;}
+  .solution .sol-text{font-size:13.5px; color:var(--ink-soft);}
+
+  .paper-actions{padding:22px 0 40px; display:flex; gap:10px; flex-wrap:wrap;}
+
+  .btn{border:1px solid var(--ink); background:var(--ink); color:var(--paper); font-size:12.5px; padding:10px 18px; cursor:pointer; letter-spacing:0.02em; display:flex; align-items:center; gap:6px; font-family:'IBM Plex Sans', sans-serif;}
+  .btn:hover{background:var(--ink-soft); border-color:var(--ink-soft);}
+  .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--ink);}
+
+  /* ---------- options overlay (language / solution picker) ---------- */
+  .overlay{position:fixed; inset:0; background:rgba(28,43,69,0.45); display:none; align-items:center; justify-content:center; padding:20px; overflow-y:auto; z-index:50;}
+  .overlay.open{display:flex;}
+  .opt-sheet{background:#fff; width:100%; max-width:380px; border:1px solid var(--line); position:relative; animation:rise .18s ease;}
+  @keyframes rise{from{transform:translateY(8px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .opt-head{display:flex; justify-content:space-between; align-items:flex-start; padding:20px 22px 14px; border-bottom:1px solid var(--line);}
+  .opt-head h3{font-family:'Fraunces', serif; font-weight:500; font-size:16px; margin:0; max-width:280px; line-height:1.35;}
+  .close-btn{border:none; background:transparent; cursor:pointer; padding:4px; color:var(--muted); flex:none;}
+  .opt-body{padding:20px 22px;}
+
+  .carousel{display:flex; align-items:center; justify-content:center; gap:16px;}
+  .carousel .nav{
+    width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--paper);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft); flex:none;
+  }
+  .carousel .nav:hover{border-color:var(--ink); color:var(--ink);}
+  .carousel .lang-label{min-width:110px; text-align:center; font-family:'Fraunces', serif; font-size:16px; font-weight:500;}
+  .dots{display:flex; gap:6px; justify-content:center; margin-top:12px;}
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--line);}
+  .dot.active{background:var(--ink);}
+
+  .switch-row{display:flex; align-items:center; justify-content:space-between; padding-top:18px; margin-top:18px; border-top:1px dashed var(--line);}
+  .switch-row .label{font-size:13.5px;}
+  .switch-row .sub{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .switch{width:38px; height:22px; border-radius:999px; background:var(--line); position:relative; cursor:pointer; flex:none;}
+  .switch.on{background:var(--ink);}
+  .switch .knob{position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .15s ease;}
+  .switch.on .knob{left:18px;}
+
+  .opt-foot{padding:16px 22px 22px; border-top:1px solid var(--line);}
+  .opt-foot .btn{width:100%; justify-content:center;}
+
+  /* toast */
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:11px 20px; font-size:13px; display:flex; align-items:center; gap:8px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:60; font-family:'IBM Plex Mono',monospace;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  footer{border-top:1px solid var(--line); padding:20px 0 40px; color:var(--muted); font-size:12px;}
+
+  @media (max-width:560px){
+    .header-inner{padding:14px 16px;}
+    .search-box{min-width:0; flex:1;}
+    .series-row{padding:16px 4px;}
+    .series-right{width:100%; justify-content:space-between; margin-left:0;}
+    .test-row{flex-wrap:wrap; padding:12px 4px; gap:6px;}
+    .test-row .row-name{flex:1 1 100%; order:1;}
+    .test-row .row-arrow{order:0;}
+    .test-row .row-q{order:2; font-size:11px;}
+    .test-row .row-sep{display:none;}
+    .test-row .row-actions{flex:1 1 100%; order:3; justify-content:flex-start; margin-left:0; gap:8px;}
+    .row-btn{font-size:12px; padding:8px 14px;}
+    .qblock .opts{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){ .opt-sheet{animation:none;} .toast{transition:none;} }
+  button:focus-visible, .pill:focus-visible, .tab:focus-visible, input:focus-visible, .series-row:focus-visible{outline:2px solid var(--seal-red); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap header-inner">
+    <div class="brand" id="brandHome">
+      <div class="brand-mark">TB</div>
+      <div class="brand-text">
+        <div class="name">Testbook Paper Room</div>
+        <div class="sub">Test series . View . Download</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="search-box" id="searchWrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="Search…">
+      </div>
+      <button class="icon-btn" id="aboutBtn" aria-label="About Testbook Paper Room">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- LEVEL 1: series list -->
+  <div id="seriesView">
+    <div class="section-heading">
+      <h2>Choose a test series</h2>
+      <span class="hint" id="seriesHint"></span>
+    </div>
+    <ul class="series-list" id="seriesList"></ul>
+  </div>
+
+  <!-- LEVEL 2: tests within a series -->
+  <div id="testsView" hidden>
+    <button class="back-row" id="backRow">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span class="label">Back to test series</span>
+    </button>
+    <h2 class="series-title" id="seriesTitle"></h2>
+
+    <div class="controls">
+      <div class="tabs" id="typeTabs"></div>
+    </div>
+    <div class="pills" id="subcatPills" hidden></div>
+
+    <ul class="test-list" id="testList"></ul>
+  </div>
+
+  <!-- LEVEL 3: full page paper viewer -->
+  <div id="paperView" hidden>
+    <button class="back-row" id="paperBackRow">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span class="label">Back to test list</span>
+    </button>
+    <div class="paper-head">
+      <h2 id="paperTitle"></h2>
+      <div class="paper-meta" id="paperMeta"></div>
+      <p class="paper-note" id="paperNote"></p>
+    </div>
+    <div id="paperQuestions"></div>
+    <div class="paper-actions">
+      <button class="btn" id="paperDownloadBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download this paper
+      </button>
+    </div>
+  </div>
+
+  <!-- ABOUT page -->
+  <div id="aboutView" hidden>
+    <button class="back-row" id="aboutBackRow">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span class="label">Back</span>
+    </button>
+    <div class="about-block">
+      <h1>Every Testbook test series mock paper, in one place to view and download.</h1>
+      <p>Browse a test series, preview any paper on screen, or save the PDF to practice offline. No timers, no live attempts — just the papers.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">Testbook Paper Room is a viewing &amp; download library only — it does not host live proctored attempts. Papers are illustrative practice sets, not official question banks.</div>
+</footer>
+
+<!-- options overlay: language + solution picker -->
+<div class="overlay" id="optionsOverlay">
+  <div class="opt-sheet">
+    <div class="opt-head">
+      <h3 id="optTestName">Test name</h3>
+      <button class="close-btn" id="optClose" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="opt-body">
+      <div class="carousel">
+        <button class="nav" id="langPrev" aria-label="Previous language">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="lang-label" id="langLabel">English</div>
+        <button class="nav" id="langNext" aria-label="Next language">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="dots" id="langDots"></div>
+
+      <div class="switch-row">
+        <div>
+          <div class="label">Include solutions</div>
+          <div class="sub">Adds a hideable explanation under each question</div>
+        </div>
+        <div class="switch" id="solutionSwitch"><div class="knob"></div></div>
+      </div>
+    </div>
+    <div class="opt-foot">
+      <button class="btn" id="optConfirm">View paper</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- api helpers ---------------- */
+
+const API = {
+  async series() {
+    const res = await fetch('/api/series');
+    if (!res.ok) throw new Error('Failed to fetch series');
+    return res.json();
+  },
+  async seriesTests(seriesId) {
+    const res = await fetch(`/api/series/${seriesId}/tests`);
+    if (!res.ok) throw new Error('Failed to fetch tests');
+    return res.json();
+  },
+  async questions(testId, lang) {
+    const res = await fetch(`/api/tests/${testId}/questions?lang=${encodeURIComponent(lang)}`);
+    if (!res.ok) throw new Error('Failed to fetch questions');
+    return res.json();
+  },
+  downloadUrl(testId, lang, withSolution) {
+    return `/api/tests/${testId}/download?lang=${encodeURIComponent(lang)}&solution=${withSolution}`;
+  }
+};
+
+/* ---------------- state ---------------- */
+
+let state = { view:'series', seriesId:null, typeTab:'all', subcat:'all', search:'' };
+
+// Cache: populated from API
+let SERIES_META = [];       // { id, name, totalTests }
+let SERIES_DETAIL = {};     // seriesId -> { seriesId, seriesName, sections: [{name, tests[]}] }
+let ALL_TESTS = {};         // testId -> test object (for quick lookup)
+const downloaded = new Set();
+
+/* ---------------- icons ---------------- */
+
+const ic = {
+  eye:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+  dl:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+  stack:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+  spinner:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></path></svg>',
+};
+
+const LANG_MAP = {en:'English',hn:'Hindi',te:'Telugu',mr:'Marathi',bn:'Bengali',ml:'Malayalam',gu:'Gujarati',kn:'Kannada',ta:'Tamil',or:'Odia',pa:'Punjabi'};
+
+/* ---------------- view switching ---------------- */
+
+function showView(name){
+  ['seriesView','testsView','paperView','aboutView'].forEach(id=>{
+    document.getElementById(id).hidden = (id !== name);
+  });
+  document.getElementById('searchWrap').style.display = (name==='seriesView' || name==='testsView') ? 'flex' : 'none';
+  window.scrollTo(0,0);
+}
+
+/* ---------------- render: series list ---------------- */
+
+async function loadSeriesList(){
+  document.getElementById('seriesHint').textContent = 'Loading…';
+  try {
+    SERIES_META = await API.series();
+  } catch(e) {
+    document.getElementById('seriesHint').textContent = 'Failed to load';
+    document.getElementById('seriesList').innerHTML = `<div class="empty">Something went wrong. Contact binbard for support.</div>`;
+    return;
+  }
+  document.getElementById('seriesHint').textContent = `${SERIES_META.length} series available`;
+  renderSeriesList();
+}
+
+function renderSeriesList(){
+  const q = state.search.trim().toLowerCase();
+  const list = SERIES_META.filter(s => !q || s.name.toLowerCase().includes(q));
+  const el = document.getElementById('seriesList');
+  el.innerHTML = list.length ? list.map(s => `
+    <li class="series-row" data-id="${s.id}" tabindex="0">
+      <div class="left">
+        <div class="series-icon">${ic.stack}</div>
+        <div class="series-name">${s.name}</div>
+      </div>
+      <div class="series-right">
+        <span class="series-count">${s.totalTests} tests</span>
+        <span class="chevron">${ic.chev}</span>
+      </div>
+    </li>`).join('') : `<div class="empty">No test series match that search.</div>`;
+
+  el.querySelectorAll('.series-row').forEach(row=>{
+    row.addEventListener('click', ()=> openSeries(row.dataset.id));
+    row.addEventListener('keydown', (e)=>{ if(e.key==='Enter') openSeries(row.dataset.id); });
+  });
+}
+
+async function openSeries(id){
+  state.view = 'tests'; state.seriesId = id; state.typeTab='all'; state.subcat='all'; state.search='';
+  document.getElementById('searchInput').value='';
+
+  const meta = SERIES_META.find(s=>s.id===id);
+  document.getElementById('seriesTitle').textContent = meta ? meta.name : 'Test Series';
+
+  // Show loading
+  document.getElementById('testList').innerHTML = `<div class="empty">${ic.spinner} Loading tests…</div>`;
+  document.getElementById('typeTabs').innerHTML = '';
+  document.getElementById('subcatPills').hidden = true;
+
+  try {
+    const detail = await API.seriesTests(id);
+    SERIES_DETAIL[id] = detail;
+    // Build flat lookup by test ID
+    for (const sec of detail.sections) {
+      for (const t of sec.tests) {
+        ALL_TESTS[t.id] = { ...t, _seriesId: id, _sectionName: sec.name };
+      }
+    }
+  } catch(e) {
+    document.getElementById('testList').innerHTML = `<div class="empty">Failed to load tests.</div>`;
+  }
+
+  renderTypeTabs();
+  renderSubcatPills();
+  renderTestList();
+  showView('testsView');
+}
+
+document.getElementById('backRow').addEventListener('click', ()=>{
+  state.view='series'; state.search='';
+  document.getElementById('searchInput').value='';
+  renderSeriesList();
+  showView('seriesView');
+});
+
+document.getElementById('brandHome').addEventListener('click', ()=>{
+  state.view='series'; state.search='';
+  document.getElementById('searchInput').value='';
+  renderSeriesList();
+  showView('seriesView');
+});
+
+document.getElementById('aboutBtn').addEventListener('click', ()=> showView('aboutView'));
+document.getElementById('aboutBackRow').addEventListener('click', ()=>{
+  if(state.view==='tests'){ showView('testsView'); } else { renderSeriesList(); showView('seriesView'); }
+});
+
+/* ---------------- render: tabs + subcats ---------------- */
+
+const TYPE_TABS = [
+  {key:'all', label:'All tests'},
+  {key:'subject', label:'Subject Test'},
+  {key:'full', label:'Full Test'},
+];
+
+function renderTypeTabs(){
+  const el = document.getElementById('typeTabs');
+  el.innerHTML = TYPE_TABS.map(t => `<button class="tab ${state.typeTab===t.key?'active':''}" data-key="${t.key}">${t.label}</button>`).join('');
+  el.querySelectorAll('.tab').forEach(b=>b.addEventListener('click', ()=>{
+    state.typeTab = b.dataset.key; state.subcat='all';
+    renderTypeTabs(); renderSubcatPills(); renderTestList();
+  }));
+}
+
+function renderSubcatPills(){
+  const wrap = document.getElementById('subcatPills');
+  if(state.typeTab !== 'subject'){ wrap.hidden = true; wrap.innerHTML=''; return; }
+  const detail = SERIES_DETAIL[state.seriesId];
+  if(!detail){ wrap.hidden = true; return; }
+  const items = [{key:'all', label:'All'}, ...detail.sections.map(s=>({key:s.name, label:s.name}))];
+  wrap.hidden = false;
+  wrap.innerHTML = items.map(i => `<button class="pill ${state.subcat===i.key?'active':''}" data-key="${i.key}">${i.label}</button>`).join('');
+  wrap.querySelectorAll('.pill').forEach(b=>b.addEventListener('click', ()=>{
+    state.subcat = b.dataset.key; renderSubcatPills(); renderTestList();
+  }));
+}
+
+/* ---------------- render: test rows ---------------- */
+
+function rowHTML(test){
+  const isDl = downloaded.has(test.id);
+  return `<li class="test-row" data-id="${test.id}">
+    <span class="row-arrow">›</span>
+    <span class="row-name">${test.title}</span>
+    <span class="row-sep">│</span>
+    <span class="row-q">${test.questionCount} Q</span>
+    <span class="row-actions">
+      <button class="row-btn view-btn" data-id="${test.id}">${ic.eye} View</button>
+      <button class="row-btn dl-btn ${isDl?'done':''}" data-id="${test.id}">${ic.dl} ${isDl?'Downloaded':'PDF'}</button>
+    </span>
+  </li>`;
+}
+function dividerHTML(label){ return `<li class="divider-row">${label}</li>`; }
+
+function renderTestList(){
+  const detail = SERIES_DETAIL[state.seriesId];
+  if(!detail){ return; }
+  const q = state.search.trim().toLowerCase();
+  const matchQ = t => !q || t.title.toLowerCase().includes(q);
+
+  let html = '';
+
+  if(state.typeTab === 'all'){
+    // Show all sections grouped
+    detail.sections.forEach(sec => {
+      const filtered = sec.tests.filter(matchQ);
+      if(filtered.length){
+        html += dividerHTML(sec.name);
+        filtered.forEach(t => html += rowHTML(t));
+      }
+    });
+  } else if(state.typeTab === 'subject'){
+    // Show sections (subject tests) filtered by subcat pill
+    detail.sections
+      .filter(sec => state.subcat==='all' || sec.name===state.subcat)
+      .forEach(sec => {
+        sec.tests.filter(matchQ).forEach(t => html += rowHTML(t));
+      });
+  } else if(state.typeTab === 'full'){
+    // "Full Test" — show tests from sections whose name contains "full" or show all if none match
+    const fullSecs = detail.sections.filter(s => /full/i.test(s.name));
+    const secs = fullSecs.length ? fullSecs : detail.sections;
+    secs.forEach(sec => {
+      sec.tests.filter(matchQ).forEach(t => html += rowHTML(t));
+    });
+  }
+
+  const listEl = document.getElementById('testList');
+  listEl.innerHTML = html || `<div class="empty">No papers match this filter yet.</div>`;
+
+  listEl.querySelectorAll('.view-btn').forEach(b=>b.addEventListener('click', ()=>openOptions(b.dataset.id, 'view')));
+  listEl.querySelectorAll('.dl-btn').forEach(b=>b.addEventListener('click', ()=>openOptions(b.dataset.id, 'download')));
+}
+
+/* ---------------- search (contextual) ---------------- */
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  state.search = e.target.value;
+  if(state.view==='series') renderSeriesList(); else renderTestList();
+});
+
+/* ---------------- options overlay (language + solution) ---------------- */
+
+const optionsOverlay = document.getElementById('optionsOverlay');
+let optState = { testId:null, action:'view', langIdx:0, withSolution:false, langs:['en'] };
+
+function openOptions(testId, action){
+  const test = ALL_TESTS[testId];
+  const langs = test && test.languages && test.languages.length ? test.languages : ['en'];
+  const langLabels = langs.map(c => ({code:c, label:LANG_MAP[c]||c}));
+
+  optState = { testId, action, langIdx:0, withSolution:false, langs };
+  document.getElementById('optTestName').textContent = test ? test.title : 'Test';
+  document.getElementById('optConfirm').textContent = action==='view' ? 'View paper' : 'Download PDF';
+  renderLangCarousel();
+  renderSolutionSwitch();
+  optionsOverlay.classList.add('open');
+}
+function closeOptions(){ optionsOverlay.classList.remove('open'); }
+
+function renderLangCarousel(){
+  const code = optState.langs[optState.langIdx] || 'en';
+  document.getElementById('langLabel').textContent = LANG_MAP[code] || code;
+  document.getElementById('langDots').innerHTML = optState.langs.map((_,i)=>
+    `<span class="dot ${i===optState.langIdx?'active':''}"></span>`).join('');
+}
+document.getElementById('langPrev').addEventListener('click', ()=>{
+  optState.langIdx = (optState.langIdx - 1 + optState.langs.length) % optState.langs.length;
+  renderLangCarousel();
+});
+document.getElementById('langNext').addEventListener('click', ()=>{
+  optState.langIdx = (optState.langIdx + 1) % optState.langs.length;
+  renderLangCarousel();
+});
+
+function renderSolutionSwitch(){
+  document.getElementById('solutionSwitch').classList.toggle('on', optState.withSolution);
+}
+document.getElementById('solutionSwitch').addEventListener('click', ()=>{
+  optState.withSolution = !optState.withSolution; renderSolutionSwitch();
+});
+
+document.getElementById('optClose').addEventListener('click', closeOptions);
+optionsOverlay.addEventListener('click', (e)=>{ if(e.target===optionsOverlay) closeOptions(); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && optionsOverlay.classList.contains('open')) closeOptions(); });
+
+document.getElementById('optConfirm').addEventListener('click', ()=>{
+  const lang = optState.langs[optState.langIdx] || 'en';
+  const withSolution = optState.withSolution;
+  const testId = optState.testId;
+  closeOptions();
+  if(optState.action === 'view'){
+    openPaperView(testId, lang, withSolution);
+  } else {
+    downloadTest(testId, lang, withSolution);
+  }
+});
+
+/* ---------------- full page paper viewer ---------------- */
+
+let currentPaper = { testId:null, lang:'en', withSolution:false };
+
+async function openPaperView(testId, lang, withSolution){
+  currentPaper = { testId, lang, withSolution };
+  const test = ALL_TESTS[testId];
+
+  document.getElementById('paperTitle').textContent = test ? test.title : 'Test';
+  document.getElementById('paperMeta').innerHTML = `
+    <span>${test?.questionCount||'?'} Qs</span>
+    <span class="badge">${LANG_MAP[lang]||lang}</span>
+    <span class="badge">${withSolution ? 'With solutions' : 'No solutions'}</span>`;
+  document.getElementById('paperNote').textContent = 'Loading questions…';
+  document.getElementById('paperQuestions').innerHTML = `<div class="empty">${ic.spinner} Fetching questions…</div>`;
+
+  showView('paperView');
+
+  try {
+    const data = await API.questions(testId, lang);
+    document.getElementById('paperNote').textContent =
+      `Showing ${data.total} questions.`;
+    renderQuestions(data.questions, withSolution);
+  } catch(e) {
+    document.getElementById('paperNote').textContent = 'Failed to load questions.';
+    document.getElementById('paperQuestions').innerHTML = `<div class="empty">Could not load questions.</div>`;
+  }
+}
+
+function renderQuestions(questions, withSolution){
+  document.getElementById('paperQuestions').innerHTML = questions.map((q, i) => {
+    const opts = q.options || [];
+    return `
+    <div class="qblock">
+      <div class="qnum">Question ${i+1}</div>
+      <div class="qtext">${escHtml(q.question)}</div>
+      <div class="opts">${opts.map((o,oi)=>`<div class="opt">${String.fromCharCode(65+oi)}. ${escHtml(o.value)}</div>`).join('')}</div>
+      <div class="qnum" style="margin-top:8px;">Answer: (${q.correctOption}) ${escHtml(getOptionLabel(opts, q.correctOption))}</div>
+      ${withSolution && q.solution ? `
+        <button class="sol-toggle" data-idx="${i}">${ic.eye} Show solution</button>
+        <div class="solution" id="sol-${i}" hidden>
+          <div class="sol-para"><div class="sol-title">Solution</div><div class="sol-text">${escHtml(q.solution)}</div></div>
+        </div>
+      ` : ''}
+    </div>`;
+  }).join('');
+
+  if(withSolution){
+    document.querySelectorAll('.sol-toggle').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = btn.dataset.idx;
+        const box = document.getElementById(`sol-${idx}`);
+        const isHidden = box.hidden;
+        box.hidden = !isHidden;
+        btn.innerHTML = isHidden ? ic.eye+' Hide solution' : ic.eye+' Show solution';
+      });
+    });
+  }
+}
+
+function getOptionLabel(opts, correctOption){
+  const found = opts.find(o => String(o.prompt) === String(correctOption));
+  return found ? found.value : `Option ${correctOption}`;
+}
+
+function escHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('paperBackRow').addEventListener('click', ()=> showView('testsView'));
+document.getElementById('paperDownloadBtn').addEventListener('click', ()=>{
+  downloadTest(currentPaper.testId, currentPaper.lang, currentPaper.withSolution);
+});
+
+/* ---------------- toast ---------------- */
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+/* ---------------- PDF download (server-side) ---------------- */
+
+async function downloadTest(testId, lang, withSolution){
+  const test = ALL_TESTS[testId];
+  if(!test) return;
+
+  const url = API.downloadUrl(testId, lang, withSolution);
+  showToast('Preparing download…');
+
+  try {
+    const res = await fetch(url);
+    const contentType = res.headers.get('Content-Type') || '';
+
+    if (!res.ok || contentType.includes('application/json')) {
+      // Server returned an error — read the message
+      const body = await res.json().catch(() => ({ error: 'Download failed' }));
+      showToast(body.error || 'Something went wrong. Could not download.');
+      return;
+    }
+
+    // It's a PDF — trigger browser download
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const fnameMatch = disposition.match(/filename="?([^"]+)"?/);
+    a.download = fnameMatch ? decodeURIComponent(fnameMatch[1]) : (test.title + '.pdf');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+
+    downloaded.add(testId);
+    showToast('Downloaded "' + test.title + '"');
+    if(state.view==='tests') renderTestList();
+  } catch(e) {
+    showToast('Download failed. Check your connection and try again.');
+  }
+}
+
+/* ---------------- init ---------------- */
+
+loadSeriesList();
+</script>
+</body>
+</html>
