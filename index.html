@@ -39,9 +39,6 @@
   .brand-text .name{font-family:'Fraunces', serif; font-weight:600; font-size:19px; letter-spacing:0.2px;}
   .brand-text .sub{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted); text-transform:uppercase; margin-top:1px;}
   .header-right{display:flex; align-items:center; gap:10px;}
-  .search-box{display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--paper); padding:9px 12px; min-width:200px; border-radius:var(--radius);}
-  .search-box input{border:none; background:transparent; outline:none; width:100%; font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--ink);}
-  .search-box svg{flex:none; opacity:0.55;}
   .icon-btn{
     width:38px; height:38px; border:1px solid var(--line); border-radius:50%; background:var(--card);
     display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft); flex:none;
@@ -55,20 +52,21 @@
   .section-heading h2{font-family:'Fraunces', serif; font-weight:500; font-size:20px; margin:0;}
   .section-heading .hint{font-size:12px; color:var(--muted);}
 
-  .series-list{list-style:none; margin:6px 0 0; padding:0; border-top:1px solid var(--line);}
+  .series-list{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:10px;}
   .series-row{
-    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-    padding:18px 4px; border-bottom:1px solid var(--line);
-    cursor:pointer; background:var(--card); transition:background .12s ease;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:16px 18px; border:1px solid var(--line); border-radius:6px;
+    cursor:pointer; background:var(--card); transition:background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+    box-shadow:0 1px 2px rgba(28,43,69,0.04);
   }
-  .series-row:hover{background:#fff;}
-  .series-row .left{display:flex; align-items:center; gap:14px; min-width:0; flex:1 1 240px;}
+  .series-row:hover{background:#fff; border-color:var(--ink-soft); box-shadow:0 3px 10px rgba(28,43,69,0.08); transform:translateY(-1px);}
+  .series-row .left{display:flex; align-items:center; gap:14px; min-width:0; flex:1 1 auto;}
   .series-icon{
-    width:38px; height:38px; flex:none; border:1px solid var(--line); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+    width:40px; height:40px; flex:none; border:1px solid var(--line); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft); background:var(--paper);
   }
   .series-name{font-family:'Fraunces', serif; font-size:16.5px; font-weight:500; line-height:1.3;}
-  .series-right{display:flex; align-items:center; gap:14px; flex:none; margin-left:auto;}
+  .series-right{display:flex; align-items:center; gap:14px; flex:none;}
   .series-count{font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--muted); white-space:nowrap;}
   .chevron{color:var(--ink-soft); flex:none;}
 
@@ -89,29 +87,33 @@
   .pill:hover{border-color:var(--ink-soft);}
   .pill.active{background:var(--ink); border-color:var(--ink); color:var(--paper);}
 
-  .test-list{list-style:none; margin:14px 0 0; padding:0; border-top:1px solid var(--line);}
+  .test-list{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:10px;}
   .test-row{
-    display:flex; align-items:center; gap:12px; padding:13px 4px; flex-wrap:wrap;
-    border-bottom:1px solid var(--line); background:var(--card);
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    border:1px solid var(--line); border-radius:6px; background:var(--card);
+    box-shadow:0 1px 2px rgba(28,43,69,0.04); transition:background .12s ease, border-color .12s ease, box-shadow .12s ease;
   }
-  .test-row:hover{background:#fff;}
+  .test-row:hover{background:#fff; border-color:var(--ink-soft); box-shadow:0 3px 10px rgba(28,43,69,0.08);}
   .row-arrow{color:var(--muted); flex:none; font-family:'IBM Plex Mono',monospace;}
-  .row-name{font-size:13.8px; flex:1 1 160px; min-width:0;}
+  .row-main{display:flex; flex-direction:column; gap:4px; flex:1 1 auto; min-width:0;}
+  .row-name{font-size:13.8px; min-width:0; line-height:1.35;}
+  .row-meta{display:flex; align-items:center; gap:8px;}
   .row-sep{color:var(--line); flex:none;}
-  .row-q{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft); white-space:nowrap; flex:none; min-width:52px;}
-  .row-actions{display:flex; gap:6px; flex:none; margin-left:auto;}
+  .row-q{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); white-space:nowrap; flex:none;}
+  .row-actions{display:flex; gap:8px; flex:none;}
   .row-btn{
     border:1px solid var(--line); background:transparent; color:var(--ink-soft);
-    font-size:11.5px; padding:6px 10px; cursor:pointer; display:flex; align-items:center; gap:5px;
-    font-family:'IBM Plex Sans', sans-serif; white-space:nowrap;
+    font-size:11.5px; padding:8px 12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;
+    font-family:'IBM Plex Sans', sans-serif; white-space:nowrap; border-radius:4px;
   }
   .row-btn:hover{border-color:var(--ink); color:var(--ink);}
   .row-btn.dl-btn.done{border-color:var(--seal-green); color:var(--seal-green);}
 
   .divider-row{
-    display:flex; align-items:center; gap:12px; padding:14px 4px 8px; color:var(--muted);
+    display:flex; align-items:center; gap:12px; padding:16px 2px 2px; color:var(--muted);
     font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
   }
+  .divider-row:first-child{padding-top:2px;}
   .divider-row::before, .divider-row::after{content:""; flex:1; border-top:1px dashed var(--line);}
 
   .empty{text-align:center; padding:60px 20px; color:var(--muted); border:1px dashed var(--line); font-family:'IBM Plex Mono',monospace; font-size:13px; margin-top:14px;}
@@ -192,19 +194,72 @@
   .katex{font-size:1.05em;}
   .qtext .katex, .opt .katex, .sol-text .katex{font-size:1em;}
 
-  @media (max-width:560px){
-    .header-inner{padding:14px 16px;}
-    .search-box{min-width:0; flex:1;}
-    .series-row{padding:16px 4px;}
-    .series-right{width:100%; justify-content:space-between; margin-left:0;}
-    .test-row{flex-wrap:wrap; padding:12px 4px; gap:6px;}
-    .test-row .row-name{flex:1 1 100%; order:1;}
-    .test-row .row-arrow{order:0;}
-    .test-row .row-q{order:2; font-size:11px;}
-    .test-row .row-sep{display:none;}
-    .test-row .row-actions{flex:1 1 100%; order:3; justify-content:flex-start; margin-left:0; gap:8px;}
-    .row-btn{font-size:12px; padding:8px 14px;}
+  @media (max-width:680px){
+    .wrap{padding:0 16px;}
+    .header-inner{padding:14px 16px; gap:10px;}
+    .brand-text .name{font-size:16.5px;}
+    .brand-text .sub{display:none;}
+    .icon-btn{width:36px; height:36px;}
+
+    .section-heading{padding:20px 0 2px;}
+    .section-heading h2{font-size:18px;}
+
+    /* series cards: keep the icon/name/count/chevron row but let it breathe
+       and let long names wrap onto a second line instead of squashing the count */
+    .series-list{gap:8px; margin-top:12px;}
+    .series-row{padding:14px; gap:10px; border-radius:8px;}
+    .series-row .left{gap:10px; flex:1 1 auto;}
+    .series-icon{width:34px; height:34px;}
+    .series-name{font-size:15px;}
+    .series-right{gap:10px;}
+    .series-count{font-size:11.5px;}
+
+    /* test cards: title on its own line, actions become a full-width,
+       equal-split, thumb-sized button row beneath it */
+    .series-title{font-size:19px; margin:6px 0 14px;}
+    .controls{padding:2px 0 2px;}
+    .tabs{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    .tab{flex:1 1 0; text-align:center; padding:9px 10px; white-space:nowrap;}
+    .pills{padding:12px 0 2px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+    .pills::-webkit-scrollbar{display:none;}
+    .pill{flex:none;}
+
+    .test-list{gap:8px; margin-top:12px;}
+    .test-row{
+      flex-wrap:wrap; align-items:flex-start; padding:14px; gap:0; border-radius:8px;
+    }
+    .test-row .row-arrow{display:none;}
+    .test-row .row-main{flex:1 1 100%; gap:6px;}
+    .row-name{font-size:14px; line-height:1.4;}
+    .row-meta{margin-top:0;}
+    .row-q{
+      font-size:11px; border:1px solid var(--line); border-radius:999px; padding:2px 9px; color:var(--muted);
+    }
+    .row-sep{display:none;}
+    .test-row .row-actions{
+      flex:1 1 100%; width:100%; margin-top:12px; gap:8px;
+      padding-top:12px; border-top:1px dashed var(--line);
+    }
+    .row-btn{
+      flex:1 1 0; font-size:12.5px; padding:11px 12px; min-height:44px;
+    }
+
+    .divider-row{font-size:10.5px; padding:14px 2px 0;}
+
     .qblock .opts{grid-template-columns:1fr;}
+    .qblock{padding:16px 0;}
+    .paper-actions{padding:18px 0 32px;}
+    .paper-actions .btn{flex:1 1 auto; justify-content:center;}
+
+    /* language / solution picker becomes a bottom sheet on small screens */
+    .overlay{align-items:flex-end; padding:0;}
+    .opt-sheet{max-width:none; border-left:none; border-right:none; border-bottom:none; border-radius:14px 14px 0 0; animation:sheet-rise .2s ease;}
+    @keyframes sheet-rise{from{transform:translateY(100%);} to{transform:translateY(0);}}
+  }
+
+  @media (max-width:380px){
+    .row-actions{flex-direction:column;}
+    .row-btn{width:100%;}
   }
   @media (prefers-reduced-motion: reduce){ .opt-sheet{animation:none;} .toast{transition:none;} }
   button:focus-visible, .pill:focus-visible, .tab:focus-visible, input:focus-visible, .series-row:focus-visible{outline:2px solid var(--seal-red); outline-offset:2px;}
@@ -222,10 +277,6 @@
       </div>
     </div>
     <div class="header-right">
-      <div class="search-box" id="searchWrap">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="searchInput" type="text" placeholder="Search…">
-      </div>
       <button class="icon-btn" id="aboutBtn" aria-label="About Testbook Paper Room">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       </button>
@@ -399,7 +450,6 @@ function showView(name){
   ['seriesView','testsView','paperView','aboutView'].forEach(id=>{
     document.getElementById(id).hidden = (id !== name);
   });
-  document.getElementById('searchWrap').style.display = (name==='seriesView' || name==='testsView') ? 'flex' : 'none';
   window.scrollTo(0,0);
 }
 
@@ -444,7 +494,6 @@ function renderSeriesList(){
 
 async function openSeries(id){
   state.view = 'tests'; state.seriesId = id; state.typeTab='all'; state.subcat='all'; state.search='';
-  document.getElementById('searchInput').value='';
 
   const meta = SERIES_META.find(s=>s.id===id);
   document.getElementById('seriesTitle').textContent = meta ? meta.name : 'Test Series';
@@ -475,14 +524,12 @@ async function openSeries(id){
 
 document.getElementById('backRow').addEventListener('click', ()=>{
   state.view='series'; state.search='';
-  document.getElementById('searchInput').value='';
   renderSeriesList();
   showView('seriesView');
 });
 
 document.getElementById('brandHome').addEventListener('click', ()=>{
   state.view='series'; state.search='';
-  document.getElementById('searchInput').value='';
   renderSeriesList();
   showView('seriesView');
 });
@@ -532,9 +579,12 @@ function rowHTML(test){
   const isDl = downloaded.has(test.id);
   return `<li class="test-row" data-id="${test.id}">
     <span class="row-arrow">›</span>
-    <span class="row-name">${test.title}</span>
-    <span class="row-sep">│</span>
-    <span class="row-q">${test.questionCount} Q</span>
+    <span class="row-main">
+      <span class="row-name">${test.title}</span>
+      <span class="row-meta">
+        <span class="row-q">${test.questionCount} Q</span>
+      </span>
+    </span>
     <span class="row-actions">
       <button class="row-btn view-btn" data-id="${test.id}">${ic.eye} View</button>
       <button class="row-btn dl-btn ${isDl?'done':''}" data-id="${test.id}">${ic.dl} ${isDl?'Downloaded':'PDF'}</button>
@@ -584,11 +634,6 @@ function renderTestList(){
 }
 
 /* ---------------- search (contextual) ---------------- */
-
-document.getElementById('searchInput').addEventListener('input', (e)=>{
-  state.search = e.target.value;
-  if(state.view==='series') renderSeriesList(); else renderTestList();
-});
 
 /* ---------------- options overlay (language + solution) ---------------- */
 
