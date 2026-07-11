@@ -8,6 +8,7 @@ import {
   fetchQuestionsAnswers,
   buildMarkdown,
   cleanHtml,
+  wrapLatex,
   type SeriesMeta,
   type SeriesTests,
 } from "./testbook";
@@ -94,7 +95,7 @@ const routes: {
             question: cleanHtml(langData.value),
             options: (langData.options || []).map((o: any) => ({
               prompt: o.prompt,
-              value: cleanHtml(o.value),
+              value: wrapLatex(cleanHtml(o.value)),
             })),
             correctOption: ansInfo.correctOption || "",
             solution: cleanHtml(solLang.value),

@@ -60,20 +60,88 @@ function sanitizeFilename(name: string): string {
 
 // ── HTML cleaning (replicates md_gen.py clean_html) ──────────────────────
 
+const HTML_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  ndash: "–", mdash: "—", lsquo: "‘", rsquo: "’",
+  ldquo: "“", rdquo: "”", hellip: "…", dagger: "†",
+  // math / symbols
+  radic: "√", sigma: "σ", rArr: "⇒", rarr: "→", larr: "←",
+  there4: "∴", times: "×", divide: "÷", minus: "−", plusmn: "±",
+  ne: "≠", le: "≤", ge: "≥", equiv: "≡", prop: "∝", sim: "∼",
+  infin: "∞", int: "∫", sum: "∑", prod: "∏", part: "∂", nabla: "∇",
+  alpha: "α", beta: "β", gamma: "γ", delta: "δ", epsilon: "ε",
+  theta: "θ", lambda: "λ", mu: "μ", pi: "π", rho: "ρ", phi: "φ",
+  omega: "ω", Sigma: "Σ", Pi: "Π", Omega: "Ω", Phi: "Φ", Psi: "Ψ",
+  Gamma: "Γ", Delta: "Δ", Theta: "Θ", Lambda: "Λ",
+  deg: "°", prime: "′", Prime: "″", euro: "€", pound: "£",
+  copy: "©", reg: "®", trade: "™", frac12: "½", frac14: "¼", frac34: "¾",
+  sup1: "¹", sup2: "²", sup3: "³", perp: "⊥", ang: "∠",
+  empty: "∅", cap: "∩", cup: "∪", sub: "⊂", sube: "⊆", sup: "⊃", supe: "⊇",
+  and: "∧", or: "∨", not: "¬", forall: "∀", exist: "∃",
+  lceil: "⌈", rceil: "⌉", lfloor: "⌊", rfloor: "⌋",
+};
+
+// Build a lowercase alias map for case-insensitive lookup
+const _ENTITY_LC: Record<string, string> = {};
+for (const [k, v] of Object.entries(HTML_ENTITIES)) {
+  _ENTITY_LC[k.toLowerCase()] = v;
+}
+
+function decodeEntities(text: string): string {
+  // Loop until stable — decoding named entities (like &amp;) can
+  // reveal new numeric entities (like &#39;) that need another pass.
+  for (let pass = 0; pass < 5; pass++) {
+    const prev = text;
+    text = text.replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d)));
+    text = text.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+    text = text.replace(/&([a-zA-Z0-9]+);/g, (m, name) => HTML_ENTITIES[name] || _ENTITY_LC[name.toLowerCase()] || m);
+    if (text === prev) break;
+  }
+  return text;
+}
+
+/**
+ * Wrap bare LaTeX commands in \\( … \\) so KaTeX can render them.
+ * Only wraps if not already inside delimiters.
+ */
+export function wrapLatex(text: string): string {
+  if (!text) return text;
+  if (/\\[\(\[]/.test(text)) return text; // already has delimiters
+  // If text contains LaTeX commands, wrap it
+  if (/\\[a-zA-Z]+/.test(text)) {
+    return `\\(${text}\\)`;
+  }
+  return text;
+}
+
+/**
+ * Same as wrapLatex but with double backslashes for markdown.
+ * Markdown's parser eats single backslash escapes, so \\( in markdown
+ * renders as \( in HTML, which KaTeX then picks up.
+ */
+export function wrapLatexMd(text: string): string {
+  if (!text) return text;
+  if (/\\[\(\[]/.test(text)) return text;
+  if (/\\[a-zA-Z]+/.test(text)) {
+    return `\\\\(${text}\\\\)`;
+  }
+  return text;
+}
+
 export function cleanHtml(html: string | undefined | null): string {
   if (!html) return "";
-  return html
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&ndash;/g, "–")
-    .replace(/<[^>]+>/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  let text = html;
+  // Decode entities FIRST — the API double-encodes (&lt;p&gt; → <p>)
+  text = decodeEntities(text);
+  // Convert block-level tags to newlines before stripping all tags
+  text = text.replace(/<(p|div|br|li|tr|h[1-6]|ul|ol|table)[^>]*\/?>/gi, "\n");
+  text = text.replace(/<\/(p|div|li|tr|h[1-6])>/gi, "\n");
+  // Strip remaining tags
+  text = text.replace(/<[^>]+>/g, "");
+  // Collapse whitespace
+  text = text.replace(/[ \t]+/g, " ");
+  text = text.replace(/\n{3,}/g, "\n\n");
+  return text.trim();
 }
 
 // ── API: fetch test series list ──────────────────────────────────────────
@@ -340,6 +408,14 @@ export function buildMarkdown(
   title: string
 ): string {
   const lines: string[] = [];
+  // KaTeX for math rendering in the PDF
+  lines.push(
+    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">',
+    '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>',
+    '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>',
+    '<script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"\\\\(",right:"\\\\)",display:false},{left:"\\\\[",right:"\\\\]",display:true}]});});</script>',
+    "",
+  );
   lines.push(`# ${title}\n`);
 
   // Extract questions
@@ -388,12 +464,12 @@ export function buildMarkdown(
       if (options.length) {
         lines.push("**Options:**\n");
         for (const opt of options) {
-          lines.push(`- (${opt.prompt}) ${cleanHtml(opt.value)}`);
+          lines.push(`- (${opt.prompt}) ${wrapLatexMd(cleanHtml(opt.value))}`);
         }
         lines.push("");
       }
 
-      lines.push(`**Answer:** (${correctOption}) ${correctText}\n`);
+      lines.push(`**Answer:** (${correctOption}) ${wrapLatexMd(correctText)}\n`);
 
       if (includeSolution && solutionText) {
         lines.push(`**Solution:**\n\n${solutionText}\n`);
