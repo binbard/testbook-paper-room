@@ -9,5 +9,13 @@ Testbook Paper Room is a viewing & download library only — it does not host li
 
 ## Steps to run
 
-1. Ensure .env file exists and has a BEARER_TOKEN=eyJhbGc...
-2. Ensure auth.csv exists with comma sep username,password value 
+1. Ensure .env file exists and has the following content
+```
+BEARER_TOKEN=eyJhbGc...
+```
+3. Ensure auth.csv exists with comma sep username,password values in following format
+```
+email,password
+admin@testbook.com,paperroom2026
+user@testbook.com,mocktest123
+```
