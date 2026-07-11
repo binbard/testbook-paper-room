@@ -534,6 +534,15 @@ export function buildPdfFilename(title: string, lang: string, solution: boolean)
 // ── Chrome path (Windows) ─────────────────────────────────────────────────
 
 const CHROME_PATHS = [
+  // Linux
+  "/usr/bin/google-chrome",
+  "/usr/bin/chromium-browser",
+  "/usr/bin/chromium",
+  "/snap/bin/chromium",
+  "/opt/google/chrome/chrome",
+  // Mac
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  // Windows
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
@@ -544,7 +553,16 @@ async function findChrome(): Promise<string> {
   for (const p of CHROME_PATHS) {
     if (await Bun.file(p).exists()) return p;
   }
-  return "chrome"; // fallback to PATH
+  // Last resort: check $PATH for common names
+  for (const name of ["google-chrome", "chromium-browser", "chromium", "chrome"]) {
+    const proc = Bun.spawn(["which", name], { stdout: "pipe", stderr: "pipe" });
+    const out = await new Response(proc.stdout).text();
+    const path = out.trim();
+    if (path && (await Bun.file(path).exists())) return path;
+  }
+  throw new Error(
+    "No Chrome/Chromium found. Install with: sudo apt install chromium-browser"
+  );
 }
 
 // ── PDF generation (HTML → Chrome headless) ──────────────────────────────
@@ -563,7 +581,7 @@ export async function generatePdf(
   // Write HTML to temp file
   const filename = buildPdfFilename(title, lang, includeSolution);
   const stem = filename.replace(/\.pdf$/, "");
-  const tmpDir = process.env.TEMP || process.env.TMPDIR || "/tmp";
+  const tmpDir = process.env.TMPDIR || process.env.TEMP || process.env.TMP || "/tmp";
   const htmlPath = `${tmpDir}/${stem}.html`;
   const pdfPath = `${tmpDir}/${filename}`;
 
@@ -576,6 +594,7 @@ export async function generatePdf(
       "--headless=new",
       "--disable-gpu",
       "--no-sandbox",
+      "--disable-dev-shm-usage",
       `--print-to-pdf=${pdfPath}`,
       "--no-pdf-header-footer",
       "--virtual-time-budget=15000",

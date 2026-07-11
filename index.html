@@ -95,11 +95,15 @@
   }
   .test-row:hover{background:#fff; border-color:var(--ink-soft); box-shadow:0 3px 10px rgba(28,43,69,0.08);}
   .row-arrow{color:var(--muted); flex:none; font-family:'IBM Plex Mono',monospace;}
-  .row-main{display:flex; flex-direction:column; gap:4px; flex:1 1 auto; min-width:0;}
-  .row-name{font-size:13.8px; min-width:0; line-height:1.35;}
-  .row-meta{display:flex; align-items:center; gap:8px;}
-  .row-sep{color:var(--line); flex:none;}
-  .row-q{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); white-space:nowrap; flex:none;}
+  .row-main{
+    display:flex; align-items:baseline; flex-wrap:wrap; column-gap:8px; row-gap:2px;
+    flex:1 1 auto; min-width:0;
+  }
+  .row-name{font-size:13.8px; min-width:0; line-height:1.35; flex:1 1 auto;}
+  .row-q{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); white-space:nowrap; flex:none;
+    border:1px solid var(--line); border-radius:999px; padding:2px 9px;
+  }
   .row-actions{display:flex; gap:8px; flex:none;}
   .row-btn{
     border:1px solid var(--line); background:transparent; color:var(--ink-soft);
@@ -225,24 +229,10 @@
     .pill{flex:none;}
 
     .test-list{gap:8px; margin-top:12px;}
-    .test-row{
-      flex-wrap:wrap; align-items:flex-start; padding:14px; gap:0; border-radius:8px;
-    }
+    .test-row{padding:12px 14px; gap:10px; border-radius:8px;}
     .test-row .row-arrow{display:none;}
-    .test-row .row-main{flex:1 1 100%; gap:6px;}
-    .row-name{font-size:14px; line-height:1.4;}
-    .row-meta{margin-top:0;}
-    .row-q{
-      font-size:11px; border:1px solid var(--line); border-radius:999px; padding:2px 9px; color:var(--muted);
-    }
-    .row-sep{display:none;}
-    .test-row .row-actions{
-      flex:1 1 100%; width:100%; margin-top:12px; gap:8px;
-      padding-top:12px; border-top:1px dashed var(--line);
-    }
-    .row-btn{
-      flex:1 1 0; font-size:12.5px; padding:11px 12px; min-height:44px;
-    }
+    .row-name{font-size:13.5px; line-height:1.4;}
+    .row-btn{font-size:12px; padding:8px 10px;}
 
     .divider-row{font-size:10.5px; padding:14px 2px 0;}
 
@@ -257,9 +247,14 @@
     @keyframes sheet-rise{from{transform:translateY(100%);} to{transform:translateY(0);}}
   }
 
-  @media (max-width:380px){
-    .row-actions{flex-direction:column;}
-    .row-btn{width:100%;}
+  @media (max-width:350px){
+    .test-row{flex-wrap:wrap; align-items:flex-start; row-gap:10px;}
+    .test-row .row-main{flex:1 1 100%;}
+    .test-row .row-actions{
+      flex:1 1 100%; width:100%; gap:8px;
+      padding-top:10px; border-top:1px dashed var(--line);
+    }
+    .row-btn{flex:1 1 0; min-height:42px;}
   }
   @media (prefers-reduced-motion: reduce){ .opt-sheet{animation:none;} .toast{transition:none;} }
   button:focus-visible, .pill:focus-visible, .tab:focus-visible, input:focus-visible, .series-row:focus-visible{outline:2px solid var(--seal-red); outline-offset:2px;}
@@ -581,9 +576,7 @@ function rowHTML(test){
     <span class="row-arrow">›</span>
     <span class="row-main">
       <span class="row-name">${test.title}</span>
-      <span class="row-meta">
-        <span class="row-q">${test.questionCount} Q</span>
-      </span>
+      <span class="row-q">${test.questionCount} Q</span>
     </span>
     <span class="row-actions">
       <button class="row-btn view-btn" data-id="${test.id}">${ic.eye} View</button>
