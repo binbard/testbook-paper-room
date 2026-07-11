@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true}]})"></script>
 <style>
   :root{
     --paper:#EFF1EC;
@@ -184,6 +187,10 @@
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   footer{border-top:1px solid var(--line); padding:20px 0 40px; color:var(--muted); font-size:12px;}
+
+  /* KaTeX math rendering */
+  .katex{font-size:1.05em;}
+  .qtext .katex, .opt .katex, .sol-text .katex{font-size:1em;}
 
   @media (max-width:560px){
     .header-inner{padding:14px 16px;}
@@ -412,8 +419,10 @@ async function loadSeriesList(){
 }
 
 function renderSeriesList(){
+  // Sort series alphabetically descending (Z→A)
+  const sorted = [...SERIES_META].sort((a,b) => b.name.localeCompare(a.name));
   const q = state.search.trim().toLowerCase();
-  const list = SERIES_META.filter(s => !q || s.name.toLowerCase().includes(q));
+  const list = sorted.filter(s => !q || s.name.toLowerCase().includes(q));
   const el = document.getElementById('seriesList');
   el.innerHTML = list.length ? list.map(s => `
     <li class="series-row" data-id="${s.id}" tabindex="0">
@@ -505,7 +514,11 @@ function renderSubcatPills(){
   if(state.typeTab !== 'subject'){ wrap.hidden = true; wrap.innerHTML=''; return; }
   const detail = SERIES_DETAIL[state.seriesId];
   if(!detail){ wrap.hidden = true; return; }
-  const items = [{key:'all', label:'All'}, ...detail.sections.map(s=>({key:s.name, label:s.name}))];
+  // Only show actual subject sections in the pill bar (not Full Test / Previous Year)
+  const subjectSections = detail.sections.filter(s =>
+    !/full test|previous year/i.test(s.name)
+  );
+  const items = [{key:'all', label:'All'}, ...subjectSections.map(s=>({key:s.name, label:s.name}))];
   wrap.hidden = false;
   wrap.innerHTML = items.map(i => `<button class="pill ${state.subcat===i.key?'active':''}" data-key="${i.key}">${i.label}</button>`).join('');
   wrap.querySelectorAll('.pill').forEach(b=>b.addEventListener('click', ()=>{
@@ -681,6 +694,11 @@ function renderQuestions(questions, withSolution){
     </div>`;
   }).join('');
 
+  // Render LaTeX math (KaTeX)
+  if (typeof renderMathInElement === 'function') {
+    try { renderMathInElement(document.getElementById('paperQuestions')); } catch(e) {}
+  }
+
   if(withSolution){
     document.querySelectorAll('.sol-toggle').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -689,6 +707,10 @@ function renderQuestions(questions, withSolution){
         const isHidden = box.hidden;
         box.hidden = !isHidden;
         btn.innerHTML = isHidden ? ic.eye+' Hide solution' : ic.eye+' Show solution';
+        // Re-render math inside newly-shown solutions
+        if (!isHidden && typeof renderMathInElement === 'function') {
+          try { renderMathInElement(box); } catch(e) {}
+        }
       });
     });
   }

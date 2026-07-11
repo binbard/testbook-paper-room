@@ -232,8 +232,6 @@ export async function fetchSeriesTests(seriesId: string): Promise<SeriesTests> {
       }
 
       if (sectionTests.length) {
-        // Sort tests alphabetically descending within each section
-        sectionTests.sort((a, b) => b.title.localeCompare(a.title));
         // For "Subject Test" sections, split into per-subject groups so the
         // frontend pills show real subject names (UP GK, Statistics, etc.)
         if (/subject/i.test(secName) && !/full/i.test(secName)) {
