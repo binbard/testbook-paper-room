@@ -71,14 +71,8 @@ const server = Bun.serve({
     }
 
     if (url.pathname === "/app" || url.pathname === "/app/") {
-      const token = extractToken(req);
-      if (!token || !validateToken(token)) {
-        // Redirect to login
-        return new Response(null, {
-          status: 302,
-          headers: { Location: "/" },
-        });
-      }
+      // Auth is checked client-side via localStorage token.
+      // The page's JS redirects to / if no token is found.
       const file = Bun.file(new URL("./index.html", import.meta.url));
       return new Response(file, {
         headers: { "Content-Type": "text/html; charset=utf-8" },

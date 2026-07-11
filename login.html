@@ -77,6 +77,15 @@
   .btn:hover{background:var(--ink-soft); border-color:var(--ink-soft);}
   .btn:disabled{opacity:0.5; cursor:not-allowed;}
 
+  .remember-row{padding:2px 0 6px;}
+  .check-label{
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    font-size:13px; color:var(--ink-soft);
+  }
+  .check-label input[type=checkbox]{
+    width:15px; height:15px; accent-color:var(--ink); cursor:pointer;
+  }
+
   .card-foot{
     border-top:1px solid var(--line); padding:18px 28px;
     text-align:center;
@@ -108,6 +117,12 @@
       <label for="password">Password</label>
       <input id="password" type="password" placeholder="········" autocomplete="current-password">
     </div>
+    <div class="remember-row">
+      <label class="check-label">
+        <input id="remember" type="checkbox">
+        <span>Remember me</span>
+      </label>
+    </div>
     <div class="error-msg" id="error"></div>
     <button class="btn" id="loginBtn" type="submit">Sign in</button>
   </div>
@@ -119,11 +134,61 @@
 <script>
 const emailEl = document.getElementById('email');
 const passEl = document.getElementById('password');
+const rememberEl = document.getElementById('remember');
 const errEl = document.getElementById('error');
 const btnEl = document.getElementById('loginBtn');
 
 function showError(msg){ errEl.textContent = msg; }
 function clearError(){ errEl.textContent = ''; }
+
+// ── Restore saved credentials ────────────────────────────────────────────
+
+const savedEmail = localStorage.getItem('tb_email');
+const savedPass = localStorage.getItem('tb_pass');
+if (savedEmail) {
+  emailEl.value = savedEmail;
+  if (savedPass) {
+    passEl.value = savedPass;
+    rememberEl.checked = true;
+  }
+}
+
+// ── Auto-login: if we already have a valid token, skip to app ────────────
+
+(async function autoLogin(){
+  const existingToken = localStorage.getItem('tb_token');
+  if (!existingToken) return;
+  // Quick check: try hitting a protected endpoint
+  try {
+    const res = await fetch('/api/series', {
+      headers: { 'Authorization': `Bearer ${existingToken}` }
+    });
+    if (res.ok) {
+      window.location.href = '/app';
+    } else {
+      // Token expired — try with saved credentials
+      if (savedEmail && savedPass) {
+        const loginRes = await fetch('/api/auth/login', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({email: savedEmail, password: savedPass}),
+        });
+        const data = await loginRes.json();
+        if (loginRes.ok && data.token) {
+          localStorage.setItem('tb_token', data.token);
+          window.location.href = '/app';
+          return;
+        }
+      }
+      // Can't auto-login — show form
+      localStorage.removeItem('tb_token');
+    }
+  } catch(e) {
+    // Server might be down — show login form
+  }
+})();
+
+// ── Login handler ────────────────────────────────────────────────────────
 
 async function doLogin(){
   clearError();
@@ -147,8 +212,16 @@ async function doLogin(){
       btnEl.textContent = 'Sign in';
       return;
     }
-    // Store token and redirect to the app
+    // Store token
     localStorage.setItem('tb_token', data.token);
+    // Always remember email
+    localStorage.setItem('tb_email', email);
+    // Remember password only if checkbox is checked
+    if (rememberEl.checked) {
+      localStorage.setItem('tb_pass', password);
+    } else {
+      localStorage.removeItem('tb_pass');
+    }
     window.location.href = '/app';
   } catch(e){
     showError('Something went wrong. Contact binbard for support.');
