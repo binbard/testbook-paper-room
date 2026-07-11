@@ -329,21 +329,33 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ---------------- auth ---------------- */
+
+const TOKEN = localStorage.getItem('tb_token');
+if (!TOKEN) { window.location.href = '/'; }
+
+function authFetch(url, opts = {}) {
+  return fetch(url, {
+    ...opts,
+    headers: { ...(opts.headers || {}), 'Authorization': `Bearer ${TOKEN}` },
+  });
+}
+
 /* ---------------- api helpers ---------------- */
 
 const API = {
   async series() {
-    const res = await fetch('/api/series');
+    const res = await authFetch('/api/series');
     if (!res.ok) throw new Error('Failed to fetch series');
     return res.json();
   },
   async seriesTests(seriesId) {
-    const res = await fetch(`/api/series/${seriesId}/tests`);
+    const res = await authFetch(`/api/series/${seriesId}/tests`);
     if (!res.ok) throw new Error('Failed to fetch tests');
     return res.json();
   },
   async questions(testId, lang) {
-    const res = await fetch(`/api/tests/${testId}/questions?lang=${encodeURIComponent(lang)}`);
+    const res = await authFetch(`/api/tests/${testId}/questions?lang=${encodeURIComponent(lang)}`);
     if (!res.ok) throw new Error('Failed to fetch questions');
     return res.json();
   },
@@ -717,7 +729,7 @@ async function downloadTest(testId, lang, withSolution){
   showToast('Preparing download…');
 
   try {
-    const res = await fetch(url);
+    const res = await authFetch(url);
     const contentType = res.headers.get('Content-Type') || '';
 
     if (!res.ok || contentType.includes('application/json')) {

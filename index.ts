@@ -1,8 +1,6 @@
 /**
  * index.ts — Bun server entry point for Testbook Paper Room.
  *
- * Serves index.html as the frontend and /api/* routes as the backend.
- *
  * Usage:
  *   cd server
  *   bun run index.ts
@@ -11,16 +9,51 @@
  */
 
 import { handleApi } from "./routes";
+import { initAuth, requireAuth, login, extractToken, validateToken } from "./auth";
 
 const PORT = parseInt(process.env.PORT || "4487");
+
+await initAuth();
 
 const server = Bun.serve({
   port: PORT,
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
 
-    // ── API routes ──────────────────────────────────────────────────
+    // ── Login endpoint (no auth required) ──────────────────────────
+    if (url.pathname === "/api/auth/login" && req.method === "POST") {
+      try {
+        const body = await req.json();
+        const { email, password } = body;
+        if (!email || !password) {
+          return new Response(JSON.stringify({ error: "Email and password are required." }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        const token = login(email, password);
+        if (!token) {
+          return new Response(JSON.stringify({ error: "Invalid email or password." }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ token }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch {
+        return new Response(JSON.stringify({ error: "Invalid request." }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ── API routes (auth required) ─────────────────────────────────
     if (url.pathname.startsWith("/api/")) {
+      const authErr = requireAuth(req);
+      if (authErr) return authErr;
       const apiRes = await handleApi(req);
       if (apiRes) return apiRes;
       return new Response(JSON.stringify({ error: "API route not found" }), {
@@ -29,19 +62,30 @@ const server = Bun.serve({
       });
     }
 
-    // ── Static files ────────────────────────────────────────────────
-    // Serve the main HTML for root and /index.html
-    if (url.pathname === "/" || url.pathname === "/index.html") {
-      const html = Bun.file(new URL("./index.html", import.meta.url));
-      if (!(await html.exists())) {
-        return new Response("Frontend file not found", { status: 404 });
-      }
-      return new Response(html, {
+    // ── App (auth required) ────────────────────────────────────────
+    if (url.pathname === "/" || url.pathname === "/login" || url.pathname === "/login.html") {
+      const file = Bun.file(new URL("./login.html", import.meta.url));
+      return new Response(file, {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
 
-    // 404 for everything else
+    if (url.pathname === "/app" || url.pathname === "/app/") {
+      const token = extractToken(req);
+      if (!token || !validateToken(token)) {
+        // Redirect to login
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/" },
+        });
+      }
+      const file = Bun.file(new URL("./index.html", import.meta.url));
+      return new Response(file, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
+    // 404
     return new Response("Not found", { status: 404 });
   },
 });
