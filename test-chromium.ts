@@ -4,6 +4,11 @@
  * Usage:  bun run test-chromium.ts
  */
 
+// Load KaTeX locally — no CDN, no network latency.
+const KATEX_CSS = await Bun.file(new URL("./vendor/katex.min.css", import.meta.url)).text();
+const KATEX_JS = await Bun.file(new URL("./vendor/katex.min.js", import.meta.url)).text();
+const KATEX_AUTORENDER_JS = await Bun.file(new URL("./vendor/auto-render.min.js", import.meta.url)).text();
+
 const PATHS = [
   "/usr/bin/google-chrome", "/usr/bin/chromium-browser", "/usr/bin/chromium",
   "/snap/bin/chromium", "/opt/google/chrome/chrome",
@@ -35,9 +40,9 @@ const htmlPath = `${tmp}/_test_chromium.html`;
 const pdfPath = `${tmp}/_test_chromium.pdf`;
 
 const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>${KATEX_CSS}</style>
+<script>${KATEX_JS}</script>
+<script>${KATEX_AUTORENDER_JS}</script>
 <style>
 body{font-family:'Segoe UI',sans-serif;max-width:600px;margin:40px auto;font-size:14px;}
 h1{font-size:18px;}.ok{color:#2F6B4F;}.katex{font-size:1.1em;}
@@ -58,6 +63,7 @@ renderMathInElement(document.body,{delimiters:[
 await Bun.write(htmlPath, html);
 console.log(`📄  HTML: ${htmlPath}`);
 
+const start = Date.now();
 const proc = Bun.spawn([
   chrome,
   "--headless=new", "--disable-gpu", "--no-sandbox",
@@ -104,4 +110,5 @@ if (!hasMath) {
 await Bun.file(htmlPath).delete();
 await Bun.file(pdfPath).delete();
 console.log("🧹  Temp files cleaned up.");
-console.log("\n✅  All checks passed — Chromium is ready!");
+const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+console.log(`\n✅  All checks passed — Chromium is ready!  (${elapsed}s)`);

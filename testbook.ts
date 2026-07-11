@@ -402,6 +402,11 @@ function getAnswerLabel(options: any[], correctOption: string): string {
 
 // ── Full HTML page builder (used by generatePdf) ─────────────────────────
 
+// Load KaTeX locally at startup — avoids CDN latency on headless servers.
+const KATEX_CSS = await Bun.file(new URL("./vendor/katex.min.css", import.meta.url)).text();
+const KATEX_JS = await Bun.file(new URL("./vendor/katex.min.js", import.meta.url)).text();
+const KATEX_AUTORENDER_JS = await Bun.file(new URL("./vendor/auto-render.min.js", import.meta.url)).text();
+
 function buildHtml(
   questionsData: any,
   answersData: any,
@@ -478,9 +483,9 @@ function buildHtml(
 <head>
 <meta charset="UTF-8">
 <title>${title}</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>${KATEX_CSS}</style>
+<script>${KATEX_JS}</script>
+<script>${KATEX_AUTORENDER_JS}</script>
 <style>
   body {
     font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
