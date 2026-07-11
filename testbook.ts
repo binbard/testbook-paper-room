@@ -400,35 +400,24 @@ function getAnswerLabel(options: any[], correctOption: string): string {
   return `Option ${correctOption}`;
 }
 
-export function buildMarkdown(
+// ── Full HTML page builder (used by generatePdf) ─────────────────────────
+
+function buildHtml(
   questionsData: any,
   answersData: any,
   lang: string,
   includeSolution: boolean,
   title: string
 ): string {
-  const lines: string[] = [];
-  // KaTeX for math rendering in the PDF
-  lines.push(
-    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">',
-    '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>',
-    '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>',
-    '<script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"\\\\(",right:"\\\\)",display:false},{left:"\\\\[",right:"\\\\]",display:true}]});});</script>',
-    "",
-  );
-  lines.push(`# ${title}\n`);
-
   // Extract questions
   let allQuestions: any[] = [];
   const data = questionsData.data;
-  if (data && typeof data === "object") {
-    if (data.sections) {
-      for (const section of data.sections) {
-        allQuestions.push(...(section.questions || []));
-      }
-    } else if (Array.isArray(data)) {
-      allQuestions = data;
+  if (data?.sections) {
+    for (const section of data.sections) {
+      allQuestions.push(...(section.questions || []));
     }
+  } else if (Array.isArray(data)) {
+    allQuestions = data;
   }
 
   // Extract answers map
@@ -439,47 +428,93 @@ export function buildMarkdown(
     answersMap = answersData;
   }
 
-  if (allQuestions.length) {
-    let idx = 0;
-    for (const q of allQuestions) {
-      idx++;
-      const qid = String(q._id || "");
-      // Try requested language first, fall back to English
-      let langData = q[lang];
-      if (!langData || !langData.value) langData = q["en"] || {};
-      const questionText = cleanHtml(langData.value);
-      const options: any[] = langData.options || [];
+  const langLabel = LANG_MAP[lang] || lang;
+  const solLabel = includeSolution ? "With solutions" : "No solutions";
 
-      const ansInfo = answersMap[qid] || {};
-      const correctOption = String(ansInfo.correctOption || "");
-      const correctText = getAnswerLabel(options, correctOption);
+  const bodyParts: string[] = [];
+  let idx = 0;
+  for (const q of allQuestions) {
+    idx++;
+    const qid = String(q._id || "");
+    let langData = q[lang];
+    if (!langData || !langData.value) langData = q["en"] || {};
+    const questionText = cleanHtml(langData.value);
+    const options: any[] = langData.options || [];
 
-      let solLang = ansInfo.sol?.[lang];
-      if (!solLang || !solLang.value) solLang = ansInfo.sol?.["en"] || {};
-      const solutionText = cleanHtml(solLang.value);
+    const ansInfo = answersMap[qid] || {};
+    const correctOption = String(ansInfo.correctOption || "");
+    const correctText = getAnswerLabel(options, correctOption);
 
-      lines.push(`## Q${idx}.`);
-      lines.push(`\n${questionText}\n`);
+    let solLang = ansInfo.sol?.[lang];
+    if (!solLang || !solLang.value) solLang = ansInfo.sol?.["en"] || {};
+    const solutionText = cleanHtml(solLang.value);
 
-      if (options.length) {
-        lines.push("**Options:**\n");
-        for (const opt of options) {
-          lines.push(`- (${opt.prompt}) ${wrapLatexMd(cleanHtml(opt.value))}`);
-        }
-        lines.push("");
+    bodyParts.push(`<div class="qblock">`);
+    bodyParts.push(`<div class="qnum">Question ${idx}</div>`);
+    bodyParts.push(`<div class="qtext">${wrapLatex(questionText)}</div>`);
+
+    if (options.length) {
+      bodyParts.push(`<div class="opts">`);
+      for (const opt of options) {
+        bodyParts.push(`<div class="opt">(${opt.prompt}) ${wrapLatex(cleanHtml(opt.value))}</div>`);
       }
-
-      lines.push(`**Answer:** (${correctOption}) ${wrapLatexMd(correctText)}\n`);
-
-      if (includeSolution && solutionText) {
-        lines.push(`**Solution:**\n\n${solutionText}\n`);
-      }
-
-      lines.push("---\n");
+      bodyParts.push(`</div>`);
     }
+
+    bodyParts.push(`<div class="answer">Answer: (${correctOption}) ${wrapLatex(correctText)}</div>`);
+
+    if (includeSolution && solutionText) {
+      bodyParts.push(`<div class="solution">`);
+      bodyParts.push(`<div class="sol-title">Solution</div>`);
+      bodyParts.push(`<div class="sol-text">${solutionText}</div>`);
+      bodyParts.push(`</div>`);
+    }
+
+    bodyParts.push(`</div>`);
   }
 
-  return lines.join("\n");
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+  body {
+    font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+    font-size: 13px; line-height: 1.6; color: #1C2B45;
+    max-width: 720px; margin: 0 auto; padding: 40px 32px;
+  }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .meta { color: #6B7280; font-size: 11px; margin-bottom: 24px; border-bottom: 1px solid #D6D2C4; padding-bottom: 14px; }
+  .qblock { border-bottom: 1px solid #D6D2C4; padding: 18px 0; page-break-inside: avoid; }
+  .qnum { font-size: 10px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .qtext { font-size: 14px; margin-bottom: 10px; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .opt { border: 1px solid #D6D2C4; padding: 6px 10px; font-size: 12px; }
+  .answer { font-weight: 600; margin-top: 6px; }
+  .solution { margin-top: 12px; border-top: 1px dashed #D6D2C4; padding-top: 12px; }
+  .sol-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #2F6B4F; margin-bottom: 4px; }
+  .sol-text { font-size: 12px; color: #3B4A63; }
+  .katex { font-size: 1.05em; }
+</style>
+</head>
+<body>
+<h1>${title}</h1>
+<div class="meta">${allQuestions.length} questions &middot; ${langLabel} &middot; ${solLabel}</div>
+${bodyParts.join("\n")}
+<script>
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "\\\\(", right: "\\\\)", display: false},
+      {left: "\\\\[", right: "\\\\]", display: true}
+    ]
+  });
+</script>
+</body>
+</html>`;
 }
 
 // ── PDF filename builder ─────────────────────────────────────────────────
@@ -496,57 +531,78 @@ export function buildPdfFilename(title: string, lang: string, solution: boolean)
   return parts.join("") + ".pdf";
 }
 
-// ── PDF generation (markdown → md-to-pdf) ────────────────────────────────
+// ── Chrome path (Windows) ─────────────────────────────────────────────────
+
+const CHROME_PATHS = [
+  "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+  "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
+];
+
+async function findChrome(): Promise<string> {
+  for (const p of CHROME_PATHS) {
+    if (await Bun.file(p).exists()) return p;
+  }
+  return "chrome"; // fallback to PATH
+}
+
+// ── PDF generation (HTML → Chrome headless) ──────────────────────────────
 
 export async function generatePdf(
   testId: string,
   lang: string,
   includeSolution: boolean
 ): Promise<{ pdf: Uint8Array; filename: string }> {
-  // 1. Fetch data from Testbook API
   const { questions, answers } = await fetchQuestionsAnswers(testId);
+  const title: string = questions.data?.title || questions.title || `Test ${testId}`;
 
-  // 2. Extract title
-  const title: string =
-    questions.data?.title || questions.title || `Test ${testId}`;
+  // Generate full HTML page
+  const html = buildHtml(questions, answers, lang, includeSolution, title);
 
-  // 3. Generate markdown
-  const mdText = buildMarkdown(questions, answers, lang, includeSolution, title);
-
-  // 4. Write to temp file
+  // Write HTML to temp file
   const filename = buildPdfFilename(title, lang, includeSolution);
   const stem = filename.replace(/\.pdf$/, "");
   const tmpDir = process.env.TEMP || process.env.TMPDIR || "/tmp";
-  const mdPath = `${tmpDir}/${stem}.md`;
+  const htmlPath = `${tmpDir}/${stem}.html`;
   const pdfPath = `${tmpDir}/${filename}`;
 
-  await Bun.write(mdPath, mdText);
+  await Bun.write(htmlPath, html);
 
   try {
-    // 5. Convert to PDF using md-to-pdf
-    const proc = Bun.spawn(["md-to-pdf", mdPath], {
+    const chrome = await findChrome();
+    const proc = Bun.spawn([
+      chrome,
+      "--headless=new",
+      "--disable-gpu",
+      "--no-sandbox",
+      `--print-to-pdf=${pdfPath}`,
+      "--no-pdf-header-footer",
+      "--virtual-time-budget=15000",
+      htmlPath,
+    ], {
       stdout: "pipe",
       stderr: "pipe",
     });
+
     const exitCode = await proc.exited;
 
     if (exitCode !== 0) {
       const stderr = await new Response(proc.stderr).text();
-      throw new Error(`md-to-pdf failed (exit ${exitCode}): ${stderr}`);
+      throw new Error(`Chrome PDF failed (exit ${exitCode}): ${stderr}`);
     }
 
-    // 6. Read the generated PDF
-    const pdf = await Bun.file(pdfPath).bytes();
+    // Small wait for filesystem flush
+    await Bun.sleep(500);
 
-    // 7. Clean up temp files
-    try { await Bun.file(mdPath).delete(); } catch {}
-    try { await Bun.file(pdfPath).delete(); } catch {}
+    const pdf = await Bun.file(pdfPath).bytes();
+    if (pdf.length < 100) {
+      throw new Error("PDF generation produced an empty or invalid file");
+    }
 
     return { pdf, filename };
-  } catch (err) {
-    // Clean up on error
-    try { await Bun.file(mdPath).delete(); } catch {}
+  } finally {
+    try { await Bun.file(htmlPath).delete(); } catch {}
     try { await Bun.file(pdfPath).delete(); } catch {}
-    throw err;
   }
 }

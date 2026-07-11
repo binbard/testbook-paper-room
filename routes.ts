@@ -6,7 +6,6 @@ import {
   fetchSeriesTests,
   generatePdf,
   fetchQuestionsAnswers,
-  buildMarkdown,
   cleanHtml,
   wrapLatex,
   type SeriesMeta,
